@@ -1,18 +1,19 @@
 
 
-simSeed<-function(N=100,n=10,mu=0.001,b=0.1,ngen=1000,selq=0.2,sigma=1,samplesize=5)
+simSeed<-function(N=100,n=10,b=0.05,ngen=1000,selq=0.2,sigma=1,samplesize=5)
 {
     require(VGAM)
                                         #Initialise Population
     genotype=matrix(NA,nrow=N,ncol=3) #genotype matrix
-    genotype[,1]=runif(N,min=50,max=55) #first column contains randomly initialised means
+    genotype[,1]=rnorm(N,50,sigma) #first column contains randomly initialised means
     genotype[,2]=sigma #second column contains the standard deviation
     genotype[,3]=n #third column contains the number of offsprings
 
                                         # Define Archaeological Record
 
-    record=matrix(NA,nrow=ngen,ncol=samplesize)
-    
+   # record=matrix(NA,nrow=ngen,ncol=samplesize)
+    recordedSDs<-numeric()
+    recordedAvgs<-numeric()
                                         #Start Simulation
 
     for (t in 1:ngen)
@@ -21,6 +22,8 @@ simSeed<-function(N=100,n=10,mu=0.001,b=0.1,ngen=1000,selq=0.2,sigma=1,samplesiz
             seeds=as.numeric(t(apply(genotype,1,function(x){replicate(x[3],rnorm(1,x[1],x[2]))})))
             index=rep(1:N,n) #record pointer to parent matrix
 
+            recordedSDs[t]=sd(seeds)
+            recordedAvgs[t]=mean(seeds)
 
                                         #random selection (archaeological sampling)
             sample.index=sample(1:length(seeds),size=samplesize,replace=FALSE)
@@ -40,13 +43,13 @@ simSeed<-function(N=100,n=10,mu=0.001,b=0.1,ngen=1000,selq=0.2,sigma=1,samplesiz
             genotype=genotype[sowdIndex,] #create new genotype
             
                                         #Mutation
-            mutationIndex=which(runif(N)<mu)
-            if (length(mutationIndex)>0)
-                {
-                    genotype[mutationIndex]=genotype[mutationIndex]+rlaplace(length(mutationIndex),0,scale=b)
-                }
+            genotype=genotype+rlaplace(nrow(genotype),0,scale=b)
         }
 
-    return(record)
+                                        #Place Holder Calculate Haldane
+
+    # haldane = somefunction(recordedSDs,recordedAvgs)
+    
+    return(record) # return(list(raw=record,haldane=haldane))
 
 }
