@@ -59,7 +59,7 @@ simSeed<-function(N=100,n=10,b=0.005,ngen=1000,selq=0.2,sigma=1,samplesize=5)
     haldaneCoef=summary(lm(haldanes~Time))$coefficients[2] # B coefficient (haldanes rate)
 
 
-    return(data.frame(haldane=haldaneCoef, N=N, selq=selq)) # return(list(raw=record,haldane=haldane))
+    return(data.frame(haldane=haldaneCoef, N=N, selq=selq, b=b)) # return(list(raw=record,haldane=haldane))
 }
 
                                         ### Collapse
