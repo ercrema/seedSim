@@ -5,7 +5,7 @@ pooledSd <- function(n, d)
 }
 
 #must be "b" estimated with the real data for each case?, i.e. the value which generate the observed size difference
-simSeed<-function(N=100,n=10,b=0.005,ngen=1000,selq=0.2,sigma=1,samplesize=5) 
+simSeed<-function(N=100,n=10,b=0.005,ngen=1000,selq=0.2,sigma=1,samplesize=5,warmup=100) 
 {
     require(VGAM)
     
@@ -21,7 +21,7 @@ simSeed<-function(N=100,n=10,b=0.005,ngen=1000,selq=0.2,sigma=1,samplesize=5)
     recordedAvgs<-numeric()
                                         #Start Simulation
 
-    for (t in 1:ngen) #or 1:max(timeTable)
+    for (t in 1:(ngen+warmup)) #or 1:max(timeTable)
         {
                                         #generate seeds
             seeds=as.numeric(t(apply(genotype,1,function(x){replicate(x[3],rnorm(1,x[1],x[2]))})))
@@ -42,8 +42,11 @@ simSeed<-function(N=100,n=10,b=0.005,ngen=1000,selq=0.2,sigma=1,samplesize=5)
             threshold=quantile(seeds,prob=selq) #define selection threshold, i.e. only seeds bigger than this value will be selected 
 
             sel=which(seeds<threshold) #need to write a small function to avoid getting less seeds than N
-            seeds=seeds[-sel] #remove from sample pool
-            index=index[-sel] #remove from sample pool
+            if (length(sel)>0)
+                {
+                    seeds=seeds[-sel] #remove from sample pool
+                    index=index[-sel] #remove from sample pool
+                }
             sowdIndex=index[sample(1:length(seeds),size=N,replace=FALSE)] #selected seeds' parent index (need to 
 
             genotype=genotype[sowdIndex,] #create new genotype
@@ -53,7 +56,8 @@ simSeed<-function(N=100,n=10,b=0.005,ngen=1000,selq=0.2,sigma=1,samplesize=5)
         }
 
                                         #Holder Calculate Haldane (without collapse)
-
+    recordedAvgs=recordedAvgs[-c(1:warmup)]
+    recordedSDs=recordedSDs[-c(1:warmup)]
     haldanes=recordedAvgs/pooledSd(rep(n*N,ngen),recordedSDs) #dependent variable (y axis in the linear model)
     Time=1:ngen #independent variable (x axis in the linear model)
     haldaneCoef=summary(lm(haldanes~Time))$coefficients[2] # B coefficient (haldanes rate)
